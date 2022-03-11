@@ -7,8 +7,13 @@ authors = ["Your Name <you@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = "^1.22.3"
+transformers = "^4.17.0"
+torch = "^1.11.0"
+datasets = "^1.18.4"
+faiss-cpu = "^1.7.2"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
