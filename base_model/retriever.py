@@ -7,7 +7,6 @@ from transformers import (
 from datasets import load_dataset
 import torch
 import os.path
-import numpy
 
 import evaluate
 
@@ -125,9 +124,8 @@ class Retriever:
         entire dataset.
 
         Returns:
-            int: overall exact match
+            float: overall exact match
             float: overall F1-score
-            int: total amount of questions handled
         """
         questions_ds = load_dataset("GroNLP/ik-nlp-22_slp", name="questions")['test']
         questions = questions_ds['question']
@@ -142,7 +140,7 @@ class Retriever:
             scores += score[0]
             predictions.append(result['text'][0])
 
-        exact_match = max((evaluate.compute_exact_match(predictions[i], answers[i])) for i in range(len(answers)))
-        f1_score = max((evaluate.compute_f1(predictions[i], answers[i])) for i in range(len(answers)))
+        exact_matches = [evaluate.compute_exact_match(predictions[i], answers[i]) for i in range(len(answers))]
+        f1_scores = [evaluate.compute_f1(predictions[i], answers[i]) for i in range(len(answers))]
 
-        return exact_match, f1_score, len(answers)
+        return sum(exact_matches) / len(exact_matches), sum(f1_scores) / len(f1_scores)

@@ -15,6 +15,6 @@ if __name__ == '__main__':
         print()  # Newline
 
     # Compute overall performance
-    exact_match, f1_score, total = r.evaluate()
-    print(f"Exact match: {exact_match} / {total}\n"
+    exact_match, f1_score = r.evaluate()
+    print(f"Exact match: {exact_match:.02f}\n"
           f"F1-score: {f1_score:.02f}")
