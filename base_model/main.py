@@ -13,3 +13,8 @@ if __name__ == '__main__':
         print(f"Result {i+1} (score: {score:.02f}):")
         print(result['text'][i])
         print()  # Newline
+
+    # Compute overall performance
+    exact_match, f1_score, total = r.evaluate()
+    print(f"Exact match: {exact_match} / {total}\n"
+          f"F1-score: {f1_score:.02f}")

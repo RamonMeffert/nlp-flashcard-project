@@ -7,6 +7,9 @@ from transformers import (
 from datasets import load_dataset
 import torch
 import os.path
+import numpy
+
+import evaluate
 
 # Hacky fix for FAISS error on macOS
 # See https://stackoverflow.com/a/63374568/4545692
@@ -49,6 +52,7 @@ class Retriever:
         # Dataset building
         self.dataset = self.__init_dataset(dataset)
 
+
     def __init_dataset(self,
                        dataset: str,
                        fname: str = "./models/paragraphs_embedding.faiss"):
@@ -65,6 +69,7 @@ class Retriever:
         """
         # Load dataset
         ds = load_dataset(dataset, name="paragraphs")["train"]
+        print(ds)
 
         if os.path.exists(fname):
             # If we already have FAISS embeddings, load them from disk
@@ -112,4 +117,32 @@ class Retriever:
         scores, results = self.dataset.get_nearest_examples(
             "embeddings", question_embedding, k=k
         )
+
         return scores, results
+
+    def evaluate(self):
+        """Evaluates the entire model by computing F1-score and exact match on the
+        entire dataset.
+
+        Returns:
+            int: overall exact match
+            float: overall F1-score
+            int: total amount of questions handled
+        """
+        questions_ds = load_dataset("GroNLP/ik-nlp-22_slp", name="questions")['test']
+        questions = questions_ds['question']
+        answers = questions_ds['answer']
+
+        predictions = []
+        scores = 0
+
+        # Currently just takes the first answer and does not look at scores yet
+        for question in questions:
+            score, result = self.retrieve(question, 1)
+            scores += score[0]
+            predictions.append(result['text'][0])
+
+        exact_match = max((evaluate.compute_exact_match(predictions[i], answers[i])) for i in range(len(answers)))
+        f1_score = max((evaluate.compute_f1(predictions[i], answers[i])) for i in range(len(answers)))
+
+        return exact_match, f1_score, len(answers)
