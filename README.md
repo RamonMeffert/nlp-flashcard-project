@@ -73,3 +73,6 @@ poetry run python main.py
 > shows that MT systems perform worse when they are asked to translate sentences
 > that describe people with non-stereotypical gender roles, like "The doctor
 > asked the nurse to help her in the > operation".
+
+
+## Setting up elastic search.

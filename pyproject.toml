@@ -11,10 +11,28 @@ transformers = "^4.17.0"
 torch = "^1.11.0"
 datasets = "^1.18.4"
 faiss-cpu = "^1.7.2"
+python-dotenv = "^0.19.2"
+elasticsearch = "^8.1.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
 autopep8 = "^1.6.0"
+mypy = "^0.941"
+
+[tool.mypy]
+no_implicit_optional=true
+
+[[tool.mypy.overrides]]
+module = [
+    "transformers",
+    "datasets",
+]
+ignore_missing_imports = true
+
+
+[tool.isort]
+profile = "black"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
