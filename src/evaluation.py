@@ -1,4 +1,5 @@
-from typing import Callable, List
+from typing import Any, Callable, List
+from src.retrievers.base_retriever import Retriever
 
 from src.utils.string_utils import (lower, remove_articles, remove_punc,
                                     white_space_fix)
@@ -63,3 +64,29 @@ def f1(prediction: str, answer: str) -> float:
     rec = len(common_tokens) / len(answer_tokens)
 
     return 2 * (prec * rec) / (prec + rec)
+
+
+def evaluate(retriever: Retriever, questions: Any, answers: Any):
+    """Evaluates the entire model by computing F1-score and exact match on the
+    entire dataset.
+
+    Returns:
+        float: overall exact match
+        float: overall F1-score
+    """
+
+    predictions = []
+    scores = 0
+
+    # Currently just takes the first answer and does not look at scores yet
+    for question in questions:
+        score, result = retriever.retrieve(question, 1)
+        scores += score[0]
+        predictions.append(result['text'][0])
+
+    exact_matches = [exact_match(
+        predictions[i], answers[i]) for i in range(len(answers))]
+    f1_scores = [f1(
+        predictions[i], answers[i]) for i in range(len(answers))]
+
+    return sum(exact_matches) / len(exact_matches), sum(f1_scores) / len(f1_scores)

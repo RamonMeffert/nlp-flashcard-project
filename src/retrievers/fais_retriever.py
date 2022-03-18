@@ -1,19 +1,27 @@
-# Hacky fix for FAISS error on macOS
-# See https://stackoverflow.com/a/63374568/4545692
 import os
 import os.path
 
 import torch
 from datasets import load_dataset
-from transformers import (DPRContextEncoder, DPRContextEncoderTokenizer,
-                          DPRQuestionEncoder, DPRQuestionEncoderTokenizer)
+from transformers import (
+    DPRContextEncoder,
+    DPRContextEncoderTokenizer,
+    DPRQuestionEncoder,
+    DPRQuestionEncoderTokenizer,
+)
 
-from src.evaluation import exact_match, f1
+from src.retrievers.base_retriever import Retriever
+from src.utils.log import get_logger
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+# Hacky fix for FAISS error on macOS
+# See https://stackoverflow.com/a/63374568/4545692
 
 
-class FAISRetriever:
+logger = get_logger()
+
+
+class FAISRetriever(Retriever):
     """A class used to retrieve relevant documents based on some query.
     based on https://huggingface.co/docs/datasets/faiss_es#faiss.
     """
@@ -65,7 +73,7 @@ class FAISRetriever:
         # Load dataset
         ds = load_dataset(dataset_name, name="paragraphs")[
             "train"]  # type: ignore
-        print(ds)
+        logger.info(ds)
 
         if os.path.exists(embedding_path):
             # If we already have FAISS embeddings, load them from disk
@@ -115,32 +123,3 @@ class FAISRetriever:
         )
 
         return scores, results
-
-    def evaluate(self):
-        """Evaluates the entire model by computing F1-score and exact match on the
-        entire dataset.
-
-        Returns:
-            float: overall exact match
-            float: overall F1-score
-        """
-        questions_ds = load_dataset(
-            self.dataset_name, name="questions")['test']
-        questions = questions_ds['question']
-        answers = questions_ds['answer']
-
-        predictions = []
-        scores = 0
-
-        # Currently just takes the first answer and does not look at scores yet
-        for question in questions:
-            score, result = self.retrieve(question, 1)
-            scores += score[0]
-            predictions.append(result['text'][0])
-
-        exact_matches = [exact_match(
-            predictions[i], answers[i]) for i in range(len(answers))]
-        f1_scores = [f1(
-            predictions[i], answers[i]) for i in range(len(answers))]
-
-        return sum(exact_matches) / len(exact_matches), sum(f1_scores) / len(f1_scores)
