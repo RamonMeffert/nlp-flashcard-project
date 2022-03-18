@@ -1,15 +1,16 @@
 from typing import Callable, List
 
-from base_model.string_utils import lower, remove_articles, remove_punc, white_space_fix
+from src.utils.string_utils import (lower, remove_articles, remove_punc,
+                                    white_space_fix)
 
 
-def normalize_text(inp: str, preprocessing_functions: List[Callable[[str], str]]):
+def _normalize_text(inp: str, preprocessing_functions: List[Callable[[str], str]]):
     for fun in preprocessing_functions:
         inp = fun(inp)
     return inp
 
 
-def normalize_text_default(inp: str) -> str:
+def _normalize_text_default(inp: str) -> str:
     """Preprocesses the sentence string by normalizing.
 
     Args:
@@ -21,10 +22,10 @@ def normalize_text_default(inp: str) -> str:
 
     steps = [remove_articles, white_space_fix, remove_punc, lower]
 
-    return normalize_text(inp, steps)
+    return _normalize_text(inp, steps)
 
 
-def compute_exact_match(prediction: str, answer: str) -> int:
+def exact_match(prediction: str, answer: str) -> int:
     """Computes exact match for sentences.
 
     Args:
@@ -34,10 +35,10 @@ def compute_exact_match(prediction: str, answer: str) -> int:
     Returns:
         int: 1 for exact match, 0 for not
     """
-    return int(normalize_text_default(prediction) == normalize_text_default(answer))
+    return int(_normalize_text_default(prediction) == _normalize_text_default(answer))
 
 
-def compute_f1(prediction: str, answer: str) -> float:
+def f1(prediction: str, answer: str) -> float:
     """Computes F1-score on token overlap for sentences.
 
     Args:
@@ -47,8 +48,8 @@ def compute_f1(prediction: str, answer: str) -> float:
     Returns:
         boolean: the f1 score
     """
-    pred_tokens = normalize_text_default(prediction).split()
-    answer_tokens = normalize_text_default(answer).split()
+    pred_tokens = _normalize_text_default(prediction).split()
+    answer_tokens = _normalize_text_default(answer).split()
 
     if len(pred_tokens) == 0 or len(answer_tokens) == 0:
         return int(pred_tokens == answer_tokens)

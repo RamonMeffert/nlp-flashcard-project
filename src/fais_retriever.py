@@ -1,23 +1,19 @@
-from transformers import (
-    DPRContextEncoder,
-    DPRContextEncoderTokenizer,
-    DPRQuestionEncoder,
-    DPRQuestionEncoderTokenizer,
-)
-from datasets import load_dataset
-import torch
-import os.path
-
-import evaluate
-
 # Hacky fix for FAISS error on macOS
 # See https://stackoverflow.com/a/63374568/4545692
 import os
+import os.path
+
+import torch
+from datasets import load_dataset
+from transformers import (DPRContextEncoder, DPRContextEncoderTokenizer,
+                          DPRQuestionEncoder, DPRQuestionEncoderTokenizer)
+
+from src.evaluation import exact_match, f1
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 
-class Retriever:
+class FAISRetriever:
     """A class used to retrieve relevant documents based on some query.
     based on https://huggingface.co/docs/datasets/faiss_es#faiss.
     """
@@ -67,12 +63,13 @@ class Retriever:
             embeddings.
         """
         # Load dataset
-        ds = load_dataset(dataset_name, name="paragraphs")["train"]
+        ds = load_dataset(dataset_name, name="paragraphs")[
+            "train"]  # type: ignore
         print(ds)
 
         if os.path.exists(embedding_path):
             # If we already have FAISS embeddings, load them from disk
-            ds.load_faiss_index('embeddings', embedding_path)
+            ds.load_faiss_index('embeddings', embedding_path)  # type: ignore
             return ds
         else:
             # If there are no FAISS embeddings, generate them
@@ -85,7 +82,7 @@ class Retriever:
                 return {"embeddings": enc}
 
             # Add FAISS embeddings
-            ds_with_embeddings = ds.map(embed)
+            ds_with_embeddings = ds.map(embed)  # type: ignore
 
             ds_with_embeddings.add_faiss_index(column="embeddings")
 
@@ -141,9 +138,9 @@ class Retriever:
             scores += score[0]
             predictions.append(result['text'][0])
 
-        exact_matches = [evaluate.compute_exact_match(
+        exact_matches = [exact_match(
             predictions[i], answers[i]) for i in range(len(answers))]
-        f1_scores = [evaluate.compute_f1(
+        f1_scores = [f1(
             predictions[i], answers[i]) for i in range(len(answers))]
 
         return sum(exact_matches) / len(exact_matches), sum(f1_scores) / len(f1_scores)
