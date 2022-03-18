@@ -22,7 +22,7 @@ class Retriever:
     based on https://huggingface.co/docs/datasets/faiss_es#faiss.
     """
 
-    def __init__(self, dataset: str = "GroNLP/ik-nlp-22_slp") -> None:
+    def __init__(self, dataset_name: str = "GroNLP/ik-nlp-22_slp") -> None:
         """Initialize the retriever
 
         Args:
@@ -49,12 +49,12 @@ class Retriever:
         )
 
         # Dataset building
-        self.dataset = self.__init_dataset(dataset)
+        self.dataset_name = dataset_name
+        self.dataset = self._init_dataset(dataset_name)
 
-
-    def __init_dataset(self,
-                       dataset: str,
-                       fname: str = "./models/paragraphs_embedding.faiss"):
+    def _init_dataset(self,
+                      dataset_name: str,
+                      embedding_path: str = "./models/paragraphs_embedding.faiss"):
         """Loads the dataset and adds FAISS embeddings.
 
         Args:
@@ -67,12 +67,12 @@ class Retriever:
             embeddings.
         """
         # Load dataset
-        ds = load_dataset(dataset, name="paragraphs")["train"]
+        ds = load_dataset(dataset_name, name="paragraphs")["train"]
         print(ds)
 
-        if os.path.exists(fname):
+        if os.path.exists(embedding_path):
             # If we already have FAISS embeddings, load them from disk
-            ds.load_faiss_index('embeddings', fname)
+            ds.load_faiss_index('embeddings', embedding_path)
             return ds
         else:
             # If there are no FAISS embeddings, generate them
@@ -91,7 +91,7 @@ class Retriever:
 
             # save dataset w/ embeddings
             os.makedirs("./models/", exist_ok=True)
-            ds_with_embeddings.save_faiss_index("embeddings", fname)
+            ds_with_embeddings.save_faiss_index("embeddings", embedding_path)
 
             return ds_with_embeddings
 
@@ -127,7 +127,8 @@ class Retriever:
             float: overall exact match
             float: overall F1-score
         """
-        questions_ds = load_dataset("GroNLP/ik-nlp-22_slp", name="questions")['test']
+        questions_ds = load_dataset(
+            self.dataset_name, name="questions")['test']
         questions = questions_ds['question']
         answers = questions_ds['answer']
 
@@ -140,7 +141,9 @@ class Retriever:
             scores += score[0]
             predictions.append(result['text'][0])
 
-        exact_matches = [evaluate.compute_exact_match(predictions[i], answers[i]) for i in range(len(answers))]
-        f1_scores = [evaluate.compute_f1(predictions[i], answers[i]) for i in range(len(answers))]
+        exact_matches = [evaluate.compute_exact_match(
+            predictions[i], answers[i]) for i in range(len(answers))]
+        f1_scores = [evaluate.compute_f1(
+            predictions[i], answers[i]) for i in range(len(answers))]
 
         return sum(exact_matches) / len(exact_matches), sum(f1_scores) / len(f1_scores)
