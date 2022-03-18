@@ -3,8 +3,8 @@ from typing import Callable, List
 from base_model.string_utils import lower, remove_articles, remove_punc, white_space_fix
 
 
-def normalize_text(inp: str, functions: List[Callable[[str], str]]):
-    for fun in functions:
+def normalize_text(inp: str, preprocessing_functions: List[Callable[[str], str]]):
+    for fun in preprocessing_functions:
         inp = fun(inp)
     return inp
 
