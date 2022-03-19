@@ -10,7 +10,10 @@ class DprReader():
             "facebook/dpr-reader-single-nq-base"
         )
 
-    def read(self, query: str, context: Dict[str, List[str]]) -> List[Tuple]:
+    def read(self,
+             query: str,
+             context: Dict[str, List[str]],
+             num_answers=5) -> List[Tuple]:
         encoded_inputs = self._tokenizer(
             questions=query,
             titles=context['titles'],
@@ -22,6 +25,10 @@ class DprReader():
         outputs = self._model(**encoded_inputs)
 
         predicted_spans = self._tokenizer.decode_best_spans(
-            encoded_inputs, outputs)
+            encoded_inputs,
+            outputs,
+            num_spans=num_answers,
+            num_spans_per_passage=2,
+            max_answer_length=512)
 
         return predicted_spans
