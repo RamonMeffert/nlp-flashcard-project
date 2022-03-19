@@ -13,15 +13,15 @@ from transformers import (
 from src.retrievers.base_retriever import Retriever
 from src.utils.log import get_logger
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 # Hacky fix for FAISS error on macOS
 # See https://stackoverflow.com/a/63374568/4545692
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 
 logger = get_logger()
 
 
-class FAISRetriever(Retriever):
+class FaissRetriever(Retriever):
     """A class used to retrieve relevant documents based on some query.
     based on https://huggingface.co/docs/datasets/faiss_es#faiss.
     """
@@ -56,14 +56,16 @@ class FAISRetriever(Retriever):
         self.dataset_name = dataset_name
         self.dataset = self._init_dataset(dataset_name)
 
-    def _init_dataset(self,
-                      dataset_name: str,
-                      embedding_path: str = "./models/paragraphs_embedding.faiss"):
+    def _init_dataset(
+            self,
+            dataset_name: str,
+            embedding_path: str = "./src/models/paragraphs_embedding.faiss",
+            force_new_embedding: bool = False):
         """Loads the dataset and adds FAISS embeddings.
 
         Args:
             dataset (str): A HuggingFace dataset name.
-            fname (str): The name to use to save the embeddings to disk for 
+            fname (str): The name to use to save the embeddings to disk for
             faster loading after the first run.
 
         Returns:
@@ -73,9 +75,8 @@ class FAISRetriever(Retriever):
         # Load dataset
         ds = load_dataset(dataset_name, name="paragraphs")[
             "train"]  # type: ignore
-        logger.info(ds)
 
-        if os.path.exists(embedding_path):
+        if not force_new_embedding and os.path.exists(embedding_path):
             # If we already have FAISS embeddings, load them from disk
             ds.load_faiss_index('embeddings', embedding_path)  # type: ignore
             return ds
@@ -95,7 +96,7 @@ class FAISRetriever(Retriever):
             ds_with_embeddings.add_faiss_index(column="embeddings")
 
             # save dataset w/ embeddings
-            os.makedirs("./models/", exist_ok=True)
+            os.makedirs("./src/models/", exist_ok=True)
             ds_with_embeddings.save_faiss_index("embeddings", embedding_path)
 
             return ds_with_embeddings
