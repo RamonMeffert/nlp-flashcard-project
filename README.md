@@ -1,5 +1,20 @@
 # nlp-flashcard-project
 
+## Todo 2
+
+- [ ] Contexts preprocessing
+  - [ ] Formules enzo eruit filteren
+  - [ ] Splitsen op zinnen...?
+- [ ] Meer language models proberen
+- [ ] Elasticsearch
+- [ ] CLI voor vragen beantwoorden
+
+### Extra dingen
+
+- [ ] Huggingface spaces demo
+- [ ] Question generation voor finetuning
+- [ ] Language model finetunen
+
 ## Todo voor progress meeting
 
 - [ ] Data inlezen/Repo klaarmaken
