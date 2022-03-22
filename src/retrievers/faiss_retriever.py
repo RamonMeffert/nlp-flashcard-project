@@ -4,10 +4,8 @@ import os.path
 import torch
 from datasets import load_dataset
 from transformers import (
-    DPRContextEncoder,
-    DPRContextEncoderTokenizer,
-    DPRQuestionEncoder,
-    DPRQuestionEncoderTokenizer,
+    LongformerModel,
+    LongformerTokenizerFast
 )
 
 from src.retrievers.base_retriever import Retriever
@@ -37,19 +35,19 @@ class FaissRetriever(Retriever):
         torch.set_grad_enabled(False)
 
         # Context encoding and tokenization
-        self.ctx_encoder = DPRContextEncoder.from_pretrained(
-            "facebook/dpr-ctx_encoder-single-nq-base"
+        self.ctx_encoder = LongformerModel.from_pretrained(
+            "allenai/longformer-base-4096"
         )
-        self.ctx_tokenizer = DPRContextEncoderTokenizer.from_pretrained(
-            "facebook/dpr-ctx_encoder-single-nq-base"
+        self.ctx_tokenizer = LongformerTokenizerFast.from_pretrained(
+            "allenai/longformer-base-4096"
         )
 
         # Question encoding and tokenization
-        self.q_encoder = DPRQuestionEncoder.from_pretrained(
-            "facebook/dpr-question_encoder-single-nq-base"
+        self.q_encoder = LongformerModel.from_pretrained(
+            "allenai/longformer-base-4096"
         )
-        self.q_tokenizer = DPRQuestionEncoderTokenizer.from_pretrained(
-            "facebook/dpr-question_encoder-single-nq-base"
+        self.q_tokenizer = LongformerTokenizerFast.from_pretrained(
+            "allenai/longformer-base-4096"
         )
 
         # Dataset building

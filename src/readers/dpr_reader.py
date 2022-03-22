@@ -1,12 +1,15 @@
-from transformers import DPRReader, DPRReaderTokenizer
+from transformers import (
+    LongformerTokenizerFast,
+    LongformerForQuestionAnswering
+)
 from typing import List, Dict, Tuple
 
 
 class DprReader():
     def __init__(self) -> None:
-        self._tokenizer = DPRReaderTokenizer.from_pretrained(
+        self._tokenizer = LongformerTokenizerFast.from_pretrained(
             "facebook/dpr-reader-single-nq-base")
-        self._model = DPRReader.from_pretrained(
+        self._model = LongformerForQuestionAnswering.from_pretrained(
             "facebook/dpr-reader-single-nq-base"
         )
 
