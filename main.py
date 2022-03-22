@@ -3,7 +3,7 @@ from datasets import DatasetDict, load_dataset
 from src.readers.dpr_reader import DprReader
 from src.retrievers.faiss_retriever import FaissRetriever
 from src.utils.log import get_logger
-# from src.evaluation import evaluate
+from src.evaluation import evaluate
 from typing import cast
 
 from src.utils.preprocessing import result_to_reader_input
@@ -11,6 +11,7 @@ from src.utils.preprocessing import result_to_reader_input
 import torch
 import transformers
 import os
+import random
 
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
 
@@ -30,9 +31,12 @@ if __name__ == '__main__':
     retriever = FaissRetriever()
 
     # Retrieve example
-    example_q = questions_test.shuffle()["question"][0]
-    scores, result = retriever.retrieve(example_q)
+    #random.seed(111)
+    random_index = random.randint(0, len(questions_test["question"])-1)
+    example_q = questions_test["question"][random_index]
+    example_a = questions_test["answer"][random_index]
 
+    scores, result = retriever.retrieve(example_q)
     reader_input = result_to_reader_input(result)
 
     # Initialize reader
@@ -61,7 +65,17 @@ if __name__ == '__main__':
     #     print(f"Result {i+1} (score: {score:.02f}):")
     #     print(result['text'][i])
 
-    # # Compute overall performance
-    # exact_match, f1_score = evaluate(
-    #     r, questions_test["question"], questions_test["answer"])
-    # print(f"Exact match: {exact_match:.02f}\n", f"F1-score: {f1_score:.02f}")
+    # Determine best answer we want to evaluate
+    highest, highest_index = 0, 0
+    for i, value in enumerate(span_scores):
+        if value + document_scores[i] > highest:
+            highest = value + document_scores[i]
+            highest_index = i
+
+    # Retrieve exact match and F1-score
+    exact_match, f1_score = evaluate(
+        example_a, answers[highest_index].text)
+    print(f"Gold answer: {example_a}\n"
+          f"Predicted answer: {answers[highest_index].text}\n"
+          f"Exact match: {exact_match:.02f}\n"
+          f"F1-score: {f1_score:.02f}")
