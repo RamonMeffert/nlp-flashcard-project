@@ -20,9 +20,7 @@ transformers.logging.set_verbosity_error()
 
 if __name__ == '__main__':
     dataset_name = "GroNLP/ik-nlp-22_slp"
-    paragraphs = load_dataset(dataset_name, "paragraphs")
     questions = cast(DatasetDict, load_dataset(dataset_name, "questions"))
-
     questions_test = questions["test"]
 
     # logger.info(questions)
@@ -58,12 +56,6 @@ if __name__ == '__main__':
         print(f"\tSpan {answer.start_index}-{answer.end_index}", end='')
         print(f"\t(score {span_scores[answer_i] * 100:.02f})")
         print()  # Newline
-
-    # print(f"Example q: {example_q} answer: {result['text'][0]}")
-
-    # for i, score in enumerate(scores):
-    #     print(f"Result {i+1} (score: {score:.02f}):")
-    #     print(result['text'][i])
 
     # Determine best answer we want to evaluate
     highest, highest_index = 0, 0

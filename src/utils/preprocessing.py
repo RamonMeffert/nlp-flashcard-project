@@ -33,3 +33,24 @@ def result_to_reader_input(result: Dict[str, List[str]]) \
         reader_result['texts'].append(result['text'][n])
 
     return reader_result
+
+
+def remove_formulas(ds):
+    """Replaces text in the 'text' column of the ds which has an average
+    word length of <= 3.5 with blanks. This essentially means that most
+    of the formulas are removed.
+
+    To-do:
+    - more-preprocessing
+    - a summarization model perhaps
+
+    Args:
+        ds: HuggingFace dataset that contains the information for the retriever
+    Returns:
+        ds: preprocessed HuggingFace dataset
+    """
+    words = ds['text'].split()
+    average = sum(len(word) for word in words) / len(words)
+    if average <= 3.5:
+        ds['text'] = ''
+    return ds
