@@ -27,11 +27,14 @@ if __name__ == '__main__':
 
     # logger.info(questions)
 
+    dataset_paragraphs = cast(DatasetDict, load_dataset(
+        "GroNLP/ik-nlp-22_slp", "paragraphs"))
+
     # Initialize retriever
-    retriever = FaissRetriever()
+    retriever = FaissRetriever(dataset_paragraphs)
 
     # Retrieve example
-    #random.seed(111)
+    # random.seed(111)
     random_index = random.randint(0, len(questions_test["question"])-1)
     example_q = questions_test["question"][random_index]
     example_a = questions_test["answer"][random_index]
