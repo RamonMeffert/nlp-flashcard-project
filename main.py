@@ -1,17 +1,17 @@
-from datasets import DatasetDict, load_dataset
-
-from src.readers.dpr_reader import DprReader
-from src.retrievers.faiss_retriever import FaissRetriever
-from src.utils.log import get_logger
-from src.evaluation import evaluate
+import os
+import random
 from typing import cast
-
-from src.utils.preprocessing import result_to_reader_input
 
 import torch
 import transformers
-import os
-import random
+from datasets import DatasetDict, load_dataset
+
+from src.evaluation import evaluate
+from src.readers.dpr_reader import DprReader
+from src.retrievers.es_retriever import ESRetriever
+from src.retrievers.faiss_retriever import FaissRetriever
+from src.utils.log import get_logger
+from src.utils.preprocessing import result_to_reader_input
 
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
 
@@ -31,7 +31,8 @@ if __name__ == '__main__':
         "GroNLP/ik-nlp-22_slp", "paragraphs"))
 
     # Initialize retriever
-    retriever = FaissRetriever(dataset_paragraphs)
+    # retriever = FaissRetriever(dataset_paragraphs)
+    retriever = ESRetriever(dataset_paragraphs)
 
     # Retrieve example
     # random.seed(111)
