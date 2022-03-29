@@ -5,6 +5,7 @@ from typing import cast
 import torch
 import transformers
 from datasets import DatasetDict, load_dataset
+from dotenv import load_dotenv
 
 from src.evaluation import evaluate
 from src.readers.dpr_reader import DprReader
@@ -13,9 +14,9 @@ from src.retrievers.faiss_retriever import FaissRetriever
 from src.utils.log import get_logger
 from src.utils.preprocessing import result_to_reader_input
 
-os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
-
 logger = get_logger()
+
+load_dotenv()
 transformers.logging.set_verbosity_error()
 
 if __name__ == '__main__':
