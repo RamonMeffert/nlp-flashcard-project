@@ -1,93 +1,77 @@
-# nlp-flashcard-project
+# NLP FlashCards
 
-## Todo 2
+## Dependencies
 
-- [ ] Contexts preprocessing
-  - [ ] Formules enzo eruit filteren
-  - [ ] Splitsen op zinnen...?
-- [ ] Meer language models proberen
-- [ ] Elasticsearch
-- [ ] CLI voor vragen beantwoorden
+Make sure you have the following tools installed:
 
-### Extra dingen
+- [Poetry](https://python-poetry.org/) for Python package management;
+- [Docker](https://www.docker.com/get-started/) for running ElasticSearch.
 
-- [ ] Huggingface spaces demo
-- [ ] Question generation voor finetuning
-- [ ] Language model finetunen
+Then, run the following commands:
 
-## Todo voor progress meeting
-
-- [ ] Data inlezen/Repo klaarmaken
-- [ ] Proof of concept met UnifiedQA
-- [ ] Standaard QA model met de dataset
-- [ ] Papers verzamelen/lezen
-- [ ] Eerder werk bekijken, inspiratie opdoen voor research richting
-
-## Overview
-
-De meeste QA systemen bestaan uit twee onderdelen:
-
-- Een retriever. Die haalt adhv de vraag _k_ relevante stukken context op, bv.
-  met `tf-idf`.
-- Een model dat het antwoord genereert. Wat je hier precies gebruikt hangt af
-  van de manier van question answering:
-  - Voor **extractive QA** gebruik je een reader;
-  - Voor **generative QA** gebruik je een generator.
-
-  Beide werken op basis van een language model.
-
-## Handige info
-
-- Huggingface QA tutorial: <https://huggingface.co/docs/transformers/tasks/question_answering#finetune-with-tensorflow>
-- Overview van open-domain question answering technieken: <https://lilianweng.github.io/posts/2020-10-29-odqa/>
-
-## Base model
-
-Tot nu toe alleen een retriever die adhv een vraag de top-k relevante documents
-ophaalt. Haalt voor veel vragen wel hoge similarity scores, maar de documents
-die die ophaalt zijn meestal niet erg relevant.
-
-```bash
-poetry shell
-cd base_model
-poetry run python main.py
+```sh
+poetry install
+docker pull docker.elastic.co/elasticsearch/elasticsearch:8.1.1
+docker network create elastic
+docker run --name es01 --net elastic -p 9200:9200 -p 9300:9300 -it docker.elastic.co/elasticsearch/elasticsearch:8.1.1
 ```
 
-### Voorbeeld
+After the last command, a password for the `elastic` user should show up in the
+terminal output (you might have to scroll up a bit). Copy this password, and
+create a copy of the `.env.example` file and rename it to `.env`. Replace the
+`<password>` placeholder with your copied password.
 
-"What is the perplexity of a language model?"
+Next, run the following command **from the root of the repository**:
 
-> Result 1 (score: 74.10):  
-> Figure 10 .17 A sample alignment between sentences in English and French, with
-> sentences extracted from Antoine de Saint-Exupery's Le Petit Prince and a
-> hypothetical translation. Sentence alignment takes sentences e 1 , ..., e n ,
-> and f 1 , ..., f n and finds minimal > sets of sentences that are translations
-> of each other, including single sentence mappings like (e 1 ,f 1 ), (e 4 -f 3
-> ), (e 5 -f 4 ), (e 6 -f 6 ) as well as 2-1 alignments (e 2 /e 3 ,f 2 ), (e 7
-> /e 8 -f 7 ), and null alignments (f 5 ).
->
-> Result 2 (score: 74.23):  
-> Character or word overlap-based metrics like chrF (or BLEU, or etc.) are
-> mainly used to compare two systems, with the goal of answering questions like:
-> did the new algorithm we just invented improve our MT system? To know if the
-> difference between the chrF scores of two > MT systems is a significant
-> difference, we use the paired bootstrap test, or the similar randomization
-> test.
->
-> Result 3 (score: 74.43):  
-> The model thus predicts the class negative for the test sentence.
->
-> Result 4 (score: 74.95):  
-> Translating from languages with extensive pro-drop, like Chinese or Japanese,
-> to non-pro-drop languages like English can be difficult since the model must
-> somehow identify each zero and recover who or what is being talked about in
-> order to insert the proper pronoun.
->
-> Result 5 (score: 76.22):  
-> Similarly, a recent challenge set, the WinoMT dataset (Stanovsky et al., 2019)
-> shows that MT systems perform worse when they are asked to translate sentences
-> that describe people with non-stereotypical gender roles, like "The doctor
-> asked the nurse to help her in the > operation".
+```sh
+docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
+```
 
+## Running
 
-## Setting up elastic search.
+To make sure we're using the dependencies managed by Poetry, run `poetry shell`
+before executing any of the following commands. Alternatively, replace any call
+like `python file.py` with `poetry run python file.py` (but we suggest the shell
+option, since it is much more convenient).
+
+### Training
+
+N/A for now
+
+### Using the QA system
+
+⚠️ **Important** ⚠️ _If you want to run an ElasticSearch query, make sure the
+docker container is running! You can check this by running `docker container
+ls`. If your container shows up (it's named `es01` if you followed these
+instructions), it's running. If not, you can run `docker start es01` to start
+it, or start it from Docker Desktop._
+
+To query the QA system, run any query as follows:
+
+```sh
+python query.py "Why can dot product be used as a similarity metric?"
+```
+
+By default, the best answer along with its location in the book will be
+returned. If you want to generate more answers (say, a top-5), you can supply
+the `--top=5` option. The default retriever uses [FAISS](https://faiss.ai/), but
+you can also use [ElasticSearch](https://www.elastic.co/elastic-stack/) using
+the `--retriever=es` option.
+
+### CLI overview
+
+To get an overview of all available options, run `python query.py --help`. The
+options are also printed below.
+
+```sh
+usage: query.py [-h] [--top int] [--retriever {faiss,es}] str
+
+positional arguments:
+  str                   The question to feed to the QA system
+
+options:
+  -h, --help            show this help message and exit
+  --top int, -t int     The number of answers to retrieve
+  --retriever {faiss,es}, -r {faiss,es}
+                        The retrieval method to use
+```
