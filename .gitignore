@@ -1,6 +1,9 @@
 # VS Code stuff
 .vscode/
 
+# Certificates
+*.crt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
