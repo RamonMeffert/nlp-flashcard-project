@@ -81,7 +81,7 @@ class FaissRetriever(Retriever):
 
             return index
 
-    def retrieve(self, query: str, k: int = 5):
+    def retrieve(self, query: str, k: int = 50):
         def embed(q):
             # Inline helper function to perform embedding
             tok = self.q_tokenizer(q, return_tensors="pt", truncation=True)

@@ -5,8 +5,6 @@ from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
 logger = get_logger()
 
 
@@ -19,11 +17,14 @@ class ESRetriever(Retriever):
         es_username = os.getenv("ELASTIC_USERNAME")
 
         self.client = Elasticsearch(
-            hosts=[es_host], http_auth=(es_username, es_password))
+            hosts=[es_host],
+            http_auth=(es_username, es_password),
+            ca_certs="./http_ca.crt")
 
         if self.client.indices.exists(index="paragraphs"):
             self.dataset.load_elasticsearch_index(
-                "paragraphs", es_index_name="paragraphs", es_client=self.client)
+                "paragraphs", es_index_name="paragraphs",
+                es_client=self.client)
         else:
             logger.info(f"Creating index 'paragraphs' on {es_host}")
             self.dataset.add_elasticsearch_index(column="text",
