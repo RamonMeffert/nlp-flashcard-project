@@ -1,6 +1,7 @@
 import os
 import random
 from typing import cast
+import time
 
 import torch
 import transformers
@@ -32,8 +33,8 @@ if __name__ == '__main__':
         "GroNLP/ik-nlp-22_slp", "paragraphs"))
 
     # Initialize retriever
-    # retriever = FaissRetriever(dataset_paragraphs)
-    retriever = ESRetriever(dataset_paragraphs)
+    retriever = FaissRetriever(dataset_paragraphs)
+    #retriever = ESRetriever(dataset_paragraphs)
 
     # Retrieve example
     # random.seed(111)
@@ -84,3 +85,36 @@ if __name__ == '__main__':
           f"Predicted answer: {answers[highest_index].text}\n"
           f"Exact match: {exact_match:.02f}\n"
           f"F1-score: {f1_score:.02f}")
+
+    # Calculate overall performance
+    # total_f1 = 0
+    # total_exact = 0
+    # total_len = len(questions_test["question"])
+    # start_time = time.time()
+    # for i, question in enumerate(questions_test["question"]):
+    #     print(question)
+    #     answer = questions_test["answer"][i]
+    #     print(answer)
+    #
+    #     scores, result = retriever.retrieve(question)
+    #     reader_input = result_to_reader_input(result)
+    #     answers = reader.read(question, reader_input)
+    #
+    #     document_scores = sm(torch.Tensor(
+    #         [pred.relevance_score for pred in answers]))
+    #     span_scores = sm(torch.Tensor(
+    #         [pred.span_score for pred in answers]))
+    #
+    #     highest, highest_index = 0, 0
+    #     for j, value in enumerate(span_scores):
+    #         if value + document_scores[j] > highest:
+    #             highest = value + document_scores[j]
+    #             highest_index = j
+    #     print(answers[highest_index])
+    #     exact_match, f1_score = evaluate(answer, answers[highest_index].text)
+    #     total_f1 += f1_score
+    #     total_exact += exact_match
+    # print(f"Total time:", round(time.time() - start_time, 2), "seconds.")
+    # print(total_f1)
+    # print(total_exact)
+    # print(total_f1/total_len)

@@ -12,6 +12,7 @@ from transformers import (
 
 from src.retrievers.base_retriever import Retriever
 from src.utils.log import get_logger
+from src.utils.preprocessing import remove_formulas
 
 # Hacky fix for FAISS error on macOS
 # See https://stackoverflow.com/a/63374568/4545692
@@ -55,6 +56,8 @@ class FaissRetriever(Retriever):
             force_new_embedding: bool = False):
 
         ds = self.dataset["train"]
+        ds = ds.map(remove_formulas)
+
 
         if not force_new_embedding and os.path.exists(self.embedding_path):
             ds.load_faiss_index(
