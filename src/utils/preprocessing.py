@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 
-def result_to_reader_input(result: Dict[str, List[str]]) \
+def context_to_reader_input(result: Dict[str, List[str]]) \
         -> Dict[str, List[str]]:
     """Takes the output of the retriever and turns it into a format the reader
     understands.

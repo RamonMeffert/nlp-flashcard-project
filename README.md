@@ -1,5 +1,11 @@
 # NLP FlashCards
 
+
+## DEMO
+
+View the demo at huggingface spaces:
+
+
 ## Dependencies
 
 Make sure you have the following tools installed:

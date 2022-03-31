@@ -13,7 +13,7 @@ from src.readers.dpr_reader import DprReader
 from src.retrievers.es_retriever import ESRetriever
 from src.retrievers.faiss_retriever import FaissRetriever
 from src.utils.log import get_logger
-from src.utils.preprocessing import result_to_reader_input
+from src.utils.preprocessing import context_to_reader_input
 
 logger = get_logger()
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     example_a = questions_test["answer"][random_index]
 
     scores, result = retriever.retrieve(example_q)
-    reader_input = result_to_reader_input(result)
+    reader_input = context_to_reader_input(result)
 
     # Initialize reader
     reader = DprReader()

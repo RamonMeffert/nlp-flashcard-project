@@ -2,7 +2,7 @@ import argparse
 import torch
 import transformers
 
-from typing import List
+from typing import List, cast
 from datasets import load_dataset, DatasetDict
 from dotenv import load_dotenv
 
@@ -10,7 +10,7 @@ from src.readers.dpr_reader import DprReader
 from src.retrievers.base_retriever import Retriever
 from src.retrievers.es_retriever import ESRetriever
 from src.retrievers.faiss_retriever import FaissRetriever
-from src.utils.preprocessing import result_to_reader_input
+from src.utils.preprocessing import context_to_reader_input
 from src.utils.log import get_logger
 
 
@@ -25,13 +25,19 @@ def print_name(contexts: dict, section: str, id: int):
         print(f"      {section}: {name}")
 
 
-def print_answers(answers: List[tuple], scores: List[float], contexts: dict):
+def get_scores(answers: List[tuple], scores: List[float], contexts: dict):
     # calculate answer scores
     sm = torch.nn.Softmax(dim=0)
     d_scores = sm(torch.Tensor(
         [pred.relevance_score for pred in answers]))
     s_scores = sm(torch.Tensor(
         [pred.span_score for pred in answers]))
+
+    return d_scores, s_scores
+
+
+def print_answers(answers: List[tuple], scores: List[float], contexts: dict):
+    d_scores, s_scores = get_scores(answers, scores, contexts)
 
     for pos, answer in enumerate(answers):
         print(f"{pos + 1:>4}. {answer.text}")
@@ -45,18 +51,32 @@ def print_answers(answers: List[tuple], scores: List[float], contexts: dict):
         print()
 
 
+def probe(query: str, retriever: Retriever, reader: DprReader, num_answers: int = 5):
+    scores, contexts = retriever.retrieve(query)
+    reader_input = context_to_reader_input(contexts)
+    answers = reader.read(query, reader_input, num_answers)
+
+    return answers, scores, contexts
+
+
+def default_probe(query: str):
+    # default probe is a probe that prints 5 answers with faiss
+    dataset = cast(DatasetDict, load_dataset("GroNLP/ik-nlp-22_slp"))
+    retriever = get_retriever("faiss", dataset)
+    reader = DprReader()
+
+    return probe(query, retriever, reader)
+
+
 def main(args: argparse.Namespace):
     # Initialize dataset
-    dataset = load_dataset("GroNLP/ik-nlp-22_slp")
+    dataset = cast(DatasetDict, load_dataset("GroNLP/ik-nlp-22_slp"))
 
     # Retrieve
     retriever = get_retriever(args.retriever, dataset)
-    scores, contexts = retriever.retrieve(args.query)
-
-    # Read
     reader = DprReader()
-    reader_input = result_to_reader_input(contexts)
-    answers = reader.read(args.query, reader_input, num_answers=args.top)
+    answers, scores, contexts = probe(
+        args.query, retriever, reader, args.num_answers)
 
     # Print output
     print_answers(answers, scores, contexts)
