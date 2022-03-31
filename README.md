@@ -12,6 +12,7 @@ Make sure you have the following tools installed:
 
 - [Poetry](https://python-poetry.org/) for Python package management;
 - [Docker](https://www.docker.com/get-started/) for running ElasticSearch.
+- [Git LFS](https://git-lfs.github.com/) for downloading binary files that do not fit in git. 
 
 Then, run the following commands:
 
