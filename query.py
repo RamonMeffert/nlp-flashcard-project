@@ -2,7 +2,7 @@ import argparse
 import torch
 import transformers
 
-from typing import List, cast
+from typing import List, Literal, Union, cast
 from datasets import load_dataset, DatasetDict
 from dotenv import load_dotenv
 
@@ -14,9 +14,9 @@ from src.utils.preprocessing import context_to_reader_input
 from src.utils.log import get_logger
 
 
-def get_retriever(r: str, ds: DatasetDict) -> Retriever:
+def get_retriever(r: Union[Literal["es"], Literal["fais"]], paragraphs: DatasetDict) -> Retriever:
     retriever = ESRetriever if r == "es" else FaissRetriever
-    return retriever(ds)
+    return retriever(paragraphs)
 
 
 def print_name(contexts: dict, section: str, id: int):
@@ -25,7 +25,7 @@ def print_name(contexts: dict, section: str, id: int):
         print(f"      {section}: {name}")
 
 
-def get_scores(answers: List[tuple], scores: List[float], contexts: dict):
+def get_retrieval_span_scores(answers: List[tuple]):
     # calculate answer scores
     sm = torch.nn.Softmax(dim=0)
     d_scores = sm(torch.Tensor(
@@ -37,7 +37,7 @@ def get_scores(answers: List[tuple], scores: List[float], contexts: dict):
 
 
 def print_answers(answers: List[tuple], scores: List[float], contexts: dict):
-    d_scores, s_scores = get_scores(answers, scores, contexts)
+    d_scores, s_scores = get_retrieval_span_scores(answers)
 
     for pos, answer in enumerate(answers):
         print(f"{pos + 1:>4}. {answer.text}")
@@ -61,8 +61,9 @@ def probe(query: str, retriever: Retriever, reader: DprReader, num_answers: int 
 
 def default_probe(query: str):
     # default probe is a probe that prints 5 answers with faiss
-    dataset = cast(DatasetDict, load_dataset("GroNLP/ik-nlp-22_slp"))
-    retriever = get_retriever("faiss", dataset)
+    paragraphs = cast(DatasetDict, load_dataset(
+        "GroNLP/ik-nlp-22_slp", "paragraphs"))
+    retriever = get_retriever("faiss", paragraphs)
     reader = DprReader()
 
     return probe(query, retriever, reader)
@@ -70,10 +71,11 @@ def default_probe(query: str):
 
 def main(args: argparse.Namespace):
     # Initialize dataset
-    dataset = cast(DatasetDict, load_dataset("GroNLP/ik-nlp-22_slp"))
+    paragraphs = cast(DatasetDict, load_dataset(
+        "GroNLP/ik-nlp-22_slp", "paragraphs"))
 
     # Retrieve
-    retriever = get_retriever(args.retriever, dataset)
+    retriever = get_retriever(args.retriever, paragraphs)
     reader = DprReader()
     answers, scores, contexts = probe(
         args.query, retriever, reader, args.num_answers)

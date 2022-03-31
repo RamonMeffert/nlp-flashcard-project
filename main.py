@@ -22,19 +22,15 @@ transformers.logging.set_verbosity_error()
 
 if __name__ == '__main__':
     dataset_name = "GroNLP/ik-nlp-22_slp"
-    paragraphs = load_dataset(dataset_name, "paragraphs")
+    paragraphs = cast(DatasetDict, load_dataset(
+        "GroNLP/ik-nlp-22_slp", "paragraphs"))
     questions = cast(DatasetDict, load_dataset(dataset_name, "questions"))
 
     questions_test = questions["test"]
 
-    # logger.info(questions)
-
-    dataset_paragraphs = cast(DatasetDict, load_dataset(
-        "GroNLP/ik-nlp-22_slp", "paragraphs"))
-
     # Initialize retriever
-    retriever = FaissRetriever(dataset_paragraphs)
-    #retriever = ESRetriever(dataset_paragraphs)
+    retriever = FaissRetriever(paragraphs)
+    #retriever = ESRetriever(paragraphs)
 
     # Retrieve example
     # random.seed(111)
@@ -45,6 +41,7 @@ if __name__ == '__main__':
     scores, result = retriever.retrieve(example_q)
     reader_input = context_to_reader_input(result)
 
+    # TODO: use new code from query.py to clean this up
     # Initialize reader
     reader = DprReader()
     answers = reader.read(example_q, reader_input)

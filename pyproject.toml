@@ -20,6 +20,7 @@ Jinja2 = "^3.1.1"
 flake8 = "^4.0.1"
 autopep8 = "^1.6.0"
 mypy = "^0.941"
+ipykernel = "^6.11.0"
 
 [tool.mypy]
 no_implicit_optional=true

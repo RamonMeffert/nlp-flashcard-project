@@ -27,7 +27,7 @@ class FaissRetriever(Retriever):
     based on https://huggingface.co/docs/datasets/faiss_es#faiss.
     """
 
-    def __init__(self, dataset: DatasetDict, embedding_path: str = "./src/models/paragraphs_embedding.faiss") -> None:
+    def __init__(self, paragraphs: DatasetDict, embedding_path: str = "./src/models/paragraphs_embedding.faiss") -> None:
         torch.set_grad_enabled(False)
 
         # Context encoding and tokenization
@@ -46,7 +46,7 @@ class FaissRetriever(Retriever):
             "facebook/dpr-question_encoder-single-nq-base"
         )
 
-        self.dataset = dataset
+        self.paragraphs = paragraphs
         self.embedding_path = embedding_path
 
         self.index = self._init_index()
@@ -55,9 +55,8 @@ class FaissRetriever(Retriever):
             self,
             force_new_embedding: bool = False):
 
-        ds = self.dataset["train"]
+        ds = self.paragraphs["train"]
         ds = ds.map(remove_formulas)
-
 
         if not force_new_embedding and os.path.exists(self.embedding_path):
             ds.load_faiss_index(
