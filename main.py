@@ -1,19 +1,20 @@
-import os
 import random
-from typing import cast
-import time
+from typing import Dict, cast
 
 import torch
 import transformers
 from datasets import DatasetDict, load_dataset
 from dotenv import load_dotenv
+from query import print_answers
 
 from src.evaluation import evaluate
 from src.readers.dpr_reader import DprReader
+from src.retrievers.base_retriever import Retriever
 from src.retrievers.es_retriever import ESRetriever
 from src.retrievers.faiss_retriever import FaissRetriever
 from src.utils.log import get_logger
 from src.utils.preprocessing import context_to_reader_input
+from src.utils.timing import get_times, timeit
 
 logger = get_logger()
 
@@ -26,62 +27,97 @@ if __name__ == '__main__':
         "GroNLP/ik-nlp-22_slp", "paragraphs"))
     questions = cast(DatasetDict, load_dataset(dataset_name, "questions"))
 
-    questions_test = questions["test"]
+    # Only doing a few questions for speed
+    subset_idx = 3
+    questions_test = questions["test"][:subset_idx]
 
-    # Initialize retriever
-    retriever = FaissRetriever(paragraphs)
-    #retriever = ESRetriever(paragraphs)
+    experiments: Dict[str, Retriever] = {
+        "faiss": FaissRetriever(paragraphs),
+        # "es": ESRetriever(paragraphs),
+    }
 
-    # Retrieve example
-    # random.seed(111)
-    random_index = random.randint(0, len(questions_test["question"])-1)
-    example_q = questions_test["question"][random_index]
-    example_a = questions_test["answer"][random_index]
+    for experiment_name, retriever in experiments.items():
+        reader = DprReader()
 
-    scores, result = retriever.retrieve(example_q)
-    reader_input = context_to_reader_input(result)
+        for idx in range(subset_idx):
+            question = questions_test["question"][idx]
+            answer = questions_test["answer"][idx]
 
-    # TODO: use new code from query.py to clean this up
-    # Initialize reader
-    reader = DprReader()
-    answers = reader.read(example_q, reader_input)
+            scores, context = retriever.retrieve(question, 5)
+            reader_input = context_to_reader_input(context)
 
-    # Calculate softmaxed scores for readable output
-    sm = torch.nn.Softmax(dim=0)
-    document_scores = sm(torch.Tensor(
-        [pred.relevance_score for pred in answers]))
-    span_scores = sm(torch.Tensor(
-        [pred.span_score for pred in answers]))
+            # workaround so we can use the decorator with a dynamic name for time recording
+            time_wrapper = timeit(f"{experiment_name}.read")
+            answers = time_wrapper(reader.read)(question, reader_input, 5)
 
-    print(example_q)
-    for answer_i, answer in enumerate(answers):
-        print(f"[{answer_i + 1}]: {answer.text}")
-        print(f"\tDocument {answer.doc_id}", end='')
-        print(f"\t(score {document_scores[answer_i] * 100:.02f})")
-        print(f"\tSpan {answer.start_index}-{answer.end_index}", end='')
-        print(f"\t(score {span_scores[answer_i] * 100:.02f})")
-        print()  # Newline
+            # Calculate softmaxed scores for readable output
+            sm = torch.nn.Softmax(dim=0)
+            document_scores = sm(torch.Tensor(
+                [pred.relevance_score for pred in answers]))
+            span_scores = sm(torch.Tensor(
+                [pred.span_score for pred in answers]))
 
-    # print(f"Example q: {example_q} answer: {result['text'][0]}")
+            print_answers(answers, scores, context)
 
-    # for i, score in enumerate(scores):
-    #     print(f"Result {i+1} (score: {score:.02f}):")
-    #     print(result['text'][i])
+            # TODO evaluation and storing of results
 
-    # Determine best answer we want to evaluate
-    highest, highest_index = 0, 0
-    for i, value in enumerate(span_scores):
-        if value + document_scores[i] > highest:
-            highest = value + document_scores[i]
-            highest_index = i
+    times = get_times()
+    print(times)
+    # TODO evaluation and storing of results
 
-    # Retrieve exact match and F1-score
-    exact_match, f1_score = evaluate(
-        example_a, answers[highest_index].text)
-    print(f"Gold answer: {example_a}\n"
-          f"Predicted answer: {answers[highest_index].text}\n"
-          f"Exact match: {exact_match:.02f}\n"
-          f"F1-score: {f1_score:.02f}")
+    # # Initialize retriever
+    # retriever = FaissRetriever(paragraphs)
+    # # retriever = ESRetriever(paragraphs)
+
+    # # Retrieve example
+    # # random.seed(111)
+    # random_index = random.randint(0, len(questions_test["question"])-1)
+    # example_q = questions_test["question"][random_index]
+    # example_a = questions_test["answer"][random_index]
+
+    # scores, result = retriever.retrieve(example_q)
+    # reader_input = context_to_reader_input(result)
+
+    # # TODO: use new code from query.py to clean this up
+    # # Initialize reader
+    # answers = reader.read(example_q, reader_input)
+
+    # # Calculate softmaxed scores for readable output
+    # sm = torch.nn.Softmax(dim=0)
+    # document_scores = sm(torch.Tensor(
+    #     [pred.relevance_score for pred in answers]))
+    # span_scores = sm(torch.Tensor(
+    #     [pred.span_score for pred in answers]))
+
+    # print(example_q)
+    # for answer_i, answer in enumerate(answers):
+    #     print(f"[{answer_i + 1}]: {answer.text}")
+    #     print(f"\tDocument {answer.doc_id}", end='')
+    #     print(f"\t(score {document_scores[answer_i] * 100:.02f})")
+    #     print(f"\tSpan {answer.start_index}-{answer.end_index}", end='')
+    #     print(f"\t(score {span_scores[answer_i] * 100:.02f})")
+    #     print()  # Newline
+
+    # # print(f"Example q: {example_q} answer: {result['text'][0]}")
+
+    # # for i, score in enumerate(scores):
+    # #     print(f"Result {i+1} (score: {score:.02f}):")
+    # #     print(result['text'][i])
+
+    # # Determine best answer we want to evaluate
+    # highest, highest_index = 0, 0
+    # for i, value in enumerate(span_scores):
+    #     if value + document_scores[i] > highest:
+    #         highest = value + document_scores[i]
+    #         highest_index = i
+
+    # # Retrieve exact match and F1-score
+    # exact_match, f1_score = evaluate(
+    #     example_a, answers[highest_index].text)
+    # print(f"Gold answer: {example_a}\n"
+    #       f"Predicted answer: {answers[highest_index].text}\n"
+    #       f"Exact match: {exact_match:.02f}\n"
+    #       f"F1-score: {f1_score:.02f}")
 
     # Calculate overall performance
     # total_f1 = 0

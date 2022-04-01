@@ -1,8 +1,11 @@
-from datasets import DatasetDict
-from src.utils.log import get_logger
-from src.retrievers.base_retriever import Retriever
-from elasticsearch import Elasticsearch
 import os
+
+from datasets import DatasetDict
+from elasticsearch import Elasticsearch
+
+from src.retrievers.base_retriever import RetrieveType, Retriever
+from src.utils.log import get_logger
+from src.utils.timing import timeit
 
 logger = get_logger()
 
@@ -31,5 +34,6 @@ class ESRetriever(Retriever):
                                                     es_index_name="paragraphs",
                                                     es_client=self.client)
 
-    def retrieve(self, query: str, k: int = 5):
+    @timeit("esretriever.retrieve")
+    def retrieve(self, query: str, k: int = 5) -> RetrieveType:
         return self.paragraphs.get_nearest_examples("paragraphs", query, k)

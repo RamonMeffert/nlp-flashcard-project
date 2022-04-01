@@ -6,12 +6,12 @@
   - [ ] Formules enzo eruit filteren
   - [ ] Splitsen op zinnen...?
 - [ ] Meer language models proberen
-- [ ] Elasticsearch
-- [ ] CLI voor vragen beantwoorden
+- [X] Elasticsearch
+- [X] CLI voor vragen beantwoorden
 
 ### Extra dingen
 
-- [ ] Huggingface spaces demo
+- [X] Huggingface spaces demo
 - [ ] Question generation voor finetuning
 - [ ] Language model finetunen
 

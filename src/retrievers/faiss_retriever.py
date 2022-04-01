@@ -10,9 +10,10 @@ from transformers import (
     DPRQuestionEncoderTokenizer,
 )
 
-from src.retrievers.base_retriever import Retriever
+from src.retrievers.base_retriever import RetrieveType, Retriever
 from src.utils.log import get_logger
 from src.utils.preprocessing import remove_formulas
+from src.utils.timing import timeit
 
 # Hacky fix for FAISS error on macOS
 # See https://stackoverflow.com/a/63374568/4545692
@@ -83,7 +84,8 @@ class FaissRetriever(Retriever):
 
             return index
 
-    def retrieve(self, query: str, k: int = 50):
+    @timeit("faissretriever.retrieve")
+    def retrieve(self, query: str, k: int = 5) -> RetrieveType:
         def embed(q):
             # Inline helper function to perform embedding
             tok = self.q_tokenizer(q, return_tensors="pt", truncation=True)
