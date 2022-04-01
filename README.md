@@ -75,7 +75,10 @@ By default, the best answer along with its location in the book will be
 returned. If you want to generate more answers (say, a top-5), you can supply
 the `--top=5` option. The default retriever uses [FAISS](https://faiss.ai/), but
 you can also use [ElasticSearch](https://www.elastic.co/elastic-stack/) using
-the `--retriever=es` option.
+the `--retriever=es` option. You can also pick a language model using the
+`--lm` option, which accepts either `dpr` (Dense Passage Retrieval) or
+`longformer`. The language model is used to generate embeddings for FAISS, and
+is used to generate the answer.
 
 ### CLI overview
 
@@ -83,7 +86,7 @@ To get an overview of all available options, run `python query.py --help`. The
 options are also printed below.
 
 ```sh
-usage: query.py [-h] [--top int] [--retriever {faiss,es}] str
+usage: query.py [-h] [--top int] [--retriever {faiss,es}] [--lm {dpr,longformer}] str
 
 positional arguments:
   str                   The question to feed to the QA system
@@ -93,6 +96,8 @@ options:
   --top int, -t int     The number of answers to retrieve
   --retriever {faiss,es}, -r {faiss,es}
                         The retrieval method to use
+  --lm {dpr,longformer}, -l {dpr,longformer}
+                        The language model to use for the FAISS retriever
 ```
 
 

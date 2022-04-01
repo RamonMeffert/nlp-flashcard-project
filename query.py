@@ -2,21 +2,48 @@ import argparse
 import torch
 import transformers
 
-from typing import List, Literal, Union, cast
+from typing import Dict, List, Literal, Tuple, cast
 from datasets import load_dataset, DatasetDict
 from dotenv import load_dotenv
 
+from src.readers.base_reader import Reader
+from src.readers.longformer_reader import LongformerReader
 from src.readers.dpr_reader import DprReader
 from src.retrievers.base_retriever import Retriever
 from src.retrievers.es_retriever import ESRetriever
-from src.retrievers.faiss_retriever import FaissRetriever
+from src.retrievers.faiss_retriever import (
+    FaissRetriever,
+    FaissRetrieverOptions
+)
 from src.utils.preprocessing import context_to_reader_input
 from src.utils.log import get_logger
 
 
-def get_retriever(r: Union[Literal["es"], Literal["fais"]], paragraphs: DatasetDict) -> Retriever:
-    retriever = ESRetriever if r == "es" else FaissRetriever
-    return retriever(paragraphs)
+def get_retriever(paragraphs: DatasetDict,
+                  r: Literal["es", "faiss"],
+                  lm: Literal["dpr", "longformer"]) -> Retriever:
+    match (r, lm):
+        case "es", _:
+            return ESRetriever()
+        case "faiss", "dpr":
+            options = FaissRetrieverOptions.dpr("./src/models/dpr.faiss")
+            return FaissRetriever(paragraphs, options)
+        case "faiss", "longformer":
+            options = FaissRetrieverOptions.longformer(
+                "./src/models/longformer.faiss")
+            return FaissRetriever(paragraphs, options)
+        case _:
+            raise ValueError("Retriever options not recognized")
+
+
+def get_reader(lm: Literal["dpr", "longformer"]) -> Reader:
+    match lm:
+        case "dpr":
+            return DprReader()
+        case "longformer":
+            return LongformerReader()
+        case _:
+            raise ValueError("Language model not recognized")
 
 
 def print_name(contexts: dict, section: str, id: int):
@@ -51,7 +78,11 @@ def print_answers(answers: List[tuple], scores: List[float], contexts: dict):
         print()
 
 
-def probe(query: str, retriever: Retriever, reader: DprReader, num_answers: int = 5):
+def probe(query: str,
+          retriever: Retriever,
+          reader: Reader,
+          num_answers: int = 5) \
+          -> Tuple[List[tuple], List[float], Dict[str, List[str]]]:
     scores, contexts = retriever.retrieve(query)
     reader_input = context_to_reader_input(contexts)
     answers = reader.read(query, reader_input, num_answers)
@@ -63,7 +94,7 @@ def default_probe(query: str):
     # default probe is a probe that prints 5 answers with faiss
     paragraphs = cast(DatasetDict, load_dataset(
         "GroNLP/ik-nlp-22_slp", "paragraphs"))
-    retriever = get_retriever("faiss", paragraphs)
+    retriever = get_retriever(paragraphs, "faiss", "dpr")
     reader = DprReader()
 
     return probe(query, retriever, reader)
@@ -75,13 +106,20 @@ def main(args: argparse.Namespace):
         "GroNLP/ik-nlp-22_slp", "paragraphs"))
 
     # Retrieve
-    retriever = get_retriever(args.retriever, paragraphs)
-    reader = DprReader()
+    retriever = get_retriever(paragraphs, args.retriever, args.lm)
+    reader = get_reader(args.lm)
     answers, scores, contexts = probe(
-        args.query, retriever, reader, args.num_answers)
+        args.query, retriever, reader, args.top)
 
     # Print output
-    print_answers(answers, scores, contexts)
+    print("Question: " + args.query)
+    print("Answer(s):")
+    if args.lm == "dpr":
+        print_answers(answers, scores, contexts)
+    else:
+        answers = filter(lambda a: len(a[0].strip()) > 0, answers)
+        for pos, answer in enumerate(answers, start=1):
+            print(f"    - {answer[0].strip()}")
 
 
 if __name__ == "__main__":
@@ -94,13 +132,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.MetavarTypeHelpFormatter
     )
-    parser.add_argument("query", type=str,
-                        help="The question to feed to the QA system")
-    parser.add_argument("--top", "-t", type=int, default=1,
-                        help="The number of answers to retrieve")
-    parser.add_argument("--retriever", "-r", type=str.lower,
-                        choices=["faiss", "es"], default="faiss",
-                        help="The retrieval method to use")
+    parser.add_argument(
+        "query", type=str, help="The question to feed to the QA system")
+    parser.add_argument(
+        "--top", "-t", type=int, default=1,
+        help="The number of answers to retrieve")
+    parser.add_argument(
+        "--retriever", "-r", type=str.lower, choices=["faiss", "es"],
+        default="faiss", help="The retrieval method to use")
+    parser.add_argument(
+        "--lm", "-l", type=str.lower,
+        choices=["dpr", "longformer"], default="dpr",
+        help="The language model to use for the FAISS retriever")
 
     args = parser.parse_args()
     main(args)

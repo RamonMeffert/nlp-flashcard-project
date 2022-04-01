@@ -1,8 +1,10 @@
 from transformers import DPRReader, DPRReaderTokenizer
 from typing import List, Dict, Tuple
 
+from src.readers.base_reader import Reader
 
-class DprReader():
+
+class DprReader(Reader):
     def __init__(self) -> None:
         self._tokenizer = DPRReaderTokenizer.from_pretrained(
             "facebook/dpr-reader-single-nq-base")
