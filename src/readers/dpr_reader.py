@@ -1,7 +1,11 @@
 from transformers import DPRReader, DPRReaderTokenizer
 from typing import List, Dict, Tuple
+from dotenv import load_dotenv
 
 from src.readers.base_reader import Reader
+
+
+load_dotenv()
 
 
 class DprReader(Reader):

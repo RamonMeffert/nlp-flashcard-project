@@ -16,7 +16,12 @@ from src.retrievers.faiss_retriever import (
     FaissRetrieverOptions
 )
 from src.utils.preprocessing import context_to_reader_input
-from src.utils.log import get_logger
+from src.utils.log import logger
+
+
+# Setup environment
+load_dotenv()
+transformers.logging.set_verbosity_error()
 
 
 def get_retriever(paragraphs: DatasetDict,
@@ -123,11 +128,6 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    # Setup environment
-    load_dotenv()
-    logger = get_logger()
-    transformers.logging.set_verbosity_error()
-
     # Set up CLI arguments
     parser = argparse.ArgumentParser(
         formatter_class=argparse.MetavarTypeHelpFormatter

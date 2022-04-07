@@ -1,11 +1,8 @@
 import time
-from typing import Dict
+from typing import Dict, List
 from dotenv import load_dotenv
 import os
-from src.utils.log import get_logger
-
-
-logger = get_logger()
+from src.utils.log import logger
 
 
 load_dotenv()
@@ -17,7 +14,7 @@ if ENABLE_TIMING:
     logger.info("Timing is enabled")
 
 
-TimingType = Dict[str, float]
+TimingType = Dict[str, List[float]]
 
 TIMES: TimingType = {}
 

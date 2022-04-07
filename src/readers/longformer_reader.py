@@ -1,17 +1,21 @@
 import torch
 from transformers import (
-    LongformerTokenizerFast,
+    LongformerTokenizer,
     LongformerForQuestionAnswering
 )
 from typing import List, Dict, Tuple
+from dotenv import load_dotenv
 
 from src.readers.base_reader import Reader
+
+
+load_dotenv()
 
 
 class LongformerReader(Reader):
     def __init__(self) -> None:
         checkpoint = "valhalla/longformer-base-4096-finetuned-squadv1"
-        self.tokenizer = LongformerTokenizerFast.from_pretrained(checkpoint)
+        self.tokenizer = LongformerTokenizer.from_pretrained(checkpoint)
         self.model = LongformerForQuestionAnswering.from_pretrained(checkpoint)
 
     def read(self,
@@ -21,8 +25,7 @@ class LongformerReader(Reader):
         answers = []
 
         for text in context['texts']:
-            encoding = self.tokenizer(
-                query, text, return_tensors="pt")
+            encoding = self.tokenizer(query, text, return_tensors="pt")
             input_ids = encoding["input_ids"]
             attention_mask = encoding["attention_mask"]
             outputs = self.model(input_ids, attention_mask=attention_mask)

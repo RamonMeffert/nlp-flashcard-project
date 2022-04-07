@@ -1,13 +1,17 @@
+import imp
 import os
 
 from datasets import DatasetDict
 from elasticsearch import Elasticsearch
+from elastic_transport import ConnectionError
+from dotenv import load_dotenv
 
 from src.retrievers.base_retriever import RetrieveType, Retriever
-from src.utils.log import get_logger
+from src.utils.log import logger
 from src.utils.timing import timeit
 
-logger = get_logger()
+
+load_dotenv()
 
 
 class ESRetriever(Retriever):
@@ -23,6 +27,13 @@ class ESRetriever(Retriever):
             http_auth=(es_username, es_password),
             ca_certs="./http_ca.crt")
 
+        try:
+            self.client.info()
+        except ConnectionError:
+            logger.error("Could not connect to ElasticSearch. " + 
+                         "Make sure it is running. Exiting now...")
+            exit()
+
         if self.client.indices.exists(index="paragraphs"):
             self.paragraphs.load_elasticsearch_index(
                 "paragraphs", es_index_name="paragraphs",
@@ -34,6 +45,5 @@ class ESRetriever(Retriever):
                                                     es_index_name="paragraphs",
                                                     es_client=self.client)
 
-    @timeit("esretriever.retrieve")
     def retrieve(self, query: str, k: int = 5) -> RetrieveType:
         return self.paragraphs.get_nearest_examples("paragraphs", query, k)

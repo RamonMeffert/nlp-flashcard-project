@@ -2,6 +2,7 @@ import os
 import os.path
 import torch
 
+from dotenv import load_dotenv
 from datasets import DatasetDict
 from dataclasses import dataclass
 from transformers import (
@@ -10,22 +11,18 @@ from transformers import (
     DPRQuestionEncoder,
     DPRQuestionEncoderTokenizerFast,
     LongformerModel,
-    LongformerTokenizerFast
+    LongformerTokenizer
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 from src.retrievers.base_retriever import RetrieveType, Retriever
-from src.utils.log import get_logger
+from src.utils.log import logger
 from src.utils.preprocessing import remove_formulas
 from src.utils.timing import timeit
 
-# Hacky fix for FAISS error on macOS
-# See https://stackoverflow.com/a/63374568/4545692
-os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
-
-logger = get_logger()
+load_dotenv()
 
 
 @dataclass
@@ -59,10 +56,10 @@ class FaissRetrieverOptions:
     @staticmethod
     def longformer(embedding_path: str):
         encoder = LongformerModel.from_pretrained(
-            "allenai/longformer-base-4096"
+            "valhalla/longformer-base-4096-finetuned-squadv1"
         )
-        tokenizer = LongformerTokenizerFast.from_pretrained(
-            "allenai/longformer-base-4096"
+        tokenizer = LongformerTokenizer.from_pretrained(
+            "valhalla/longformer-base-4096-finetuned-squadv1"
         )
         return FaissRetrieverOptions(
             ctx_encoder=encoder,
@@ -145,7 +142,6 @@ class FaissRetriever(Retriever):
 
             return index
 
-    @timeit("faissretriever.retrieve")
     def retrieve(self, query: str, k: int = 5) -> RetrieveType:
         question_embedding = self._embed_question(query)
         scores, results = self.index.get_nearest_examples(
