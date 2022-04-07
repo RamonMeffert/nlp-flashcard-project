@@ -13,8 +13,7 @@ class DprReader(Reader):
         self._tokenizer = DPRReaderTokenizer.from_pretrained(
             "facebook/dpr-reader-single-nq-base")
         self._model = DPRReader.from_pretrained(
-            "facebook/dpr-reader-single-nq-base"
-        )
+            "facebook/dpr-reader-single-nq-base")
 
     def read(self,
              query: str,

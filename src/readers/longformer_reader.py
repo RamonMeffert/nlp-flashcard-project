@@ -24,7 +24,7 @@ class LongformerReader(Reader):
              num_answers=5) -> List[Tuple]:
         answers = []
 
-        for text in context['texts']:
+        for text in context['texts'][:num_answers]:
             encoding = self.tokenizer(query, text, return_tensors="pt")
             input_ids = encoding["input_ids"]
             attention_mask = encoding["attention_mask"]

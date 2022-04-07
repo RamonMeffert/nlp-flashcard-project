@@ -17,7 +17,8 @@ def context_to_reader_input(result: Dict[str, List[str]]) \
     # Prepare result
     reader_result = {
         'titles': [],
-        'texts': []
+        'texts': [],
+        'scores': []
     }
 
     for n in range(num_entries):
@@ -31,6 +32,7 @@ def context_to_reader_input(result: Dict[str, List[str]]) \
 
         reader_result['titles'].append(title)
         reader_result['texts'].append(result['text'][n])
+        reader_result['scores'].append(result['text'][n])
 
     return reader_result
 

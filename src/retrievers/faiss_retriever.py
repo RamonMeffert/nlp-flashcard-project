@@ -98,7 +98,8 @@ class FaissRetriever(Retriever):
     def _embed_question(self, q):
         match self.lm:
             case "dpr":
-                tok = self.q_tokenizer(q, return_tensors="pt", truncation=True)
+                tok = self.q_tokenizer(
+                    q, return_tensors="pt", truncation=True, padding=True)
                 return self.q_encoder(**tok)[0][0].numpy()
             case "longformer":
                 tok = self.q_tokenizer(q, return_tensors="pt")
@@ -110,7 +111,7 @@ class FaissRetriever(Retriever):
         match self.lm:
             case "dpr":
                 tok = self.ctx_tokenizer(
-                    p, return_tensors="pt", truncation=True)
+                    p, return_tensors="pt", truncation=True, padding=True)
                 enc = self.ctx_encoder(**tok)[0][0].numpy()
                 return {"embeddings": enc}
             case "longformer":

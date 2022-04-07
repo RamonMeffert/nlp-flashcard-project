@@ -74,4 +74,5 @@ def evaluate(answer: Any, prediction: Any):
         float: overall exact match
         float: overall F1-score
     """
+    print(prediction, answer)
     return exact_match(prediction, answer), f1(prediction, answer)
