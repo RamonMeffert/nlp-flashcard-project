@@ -5,7 +5,7 @@ colorFrom: yellow
 colorTo: blue
 sdk: gradio
 sdk_version: 2.9.0
-python_version: 3.10
+python_version: 3.10.4
 app_file: app.py
 pinned: true
 ---
@@ -60,10 +60,6 @@ To make sure we're using the dependencies managed by Poetry, run `poetry shell`
 before executing any of the following commands. Alternatively, replace any call
 like `python file.py` with `poetry run python file.py` (but we suggest the shell
 option, since it is much more convenient).
-
-### Training
-
-N/A for now. The current version of the system does not require any 
 
 ### Using the QA system
 
