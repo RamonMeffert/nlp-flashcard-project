@@ -17,6 +17,8 @@ pinned: true
 
 View the demo at huggingface spaces:
 
+[DEMO](https://huggingface.co/spaces/RugNlpFlashcards/Speech_Language_Processing_Jurafsky_Martin)
+
 
 ## Dependencies
 
@@ -45,6 +47,11 @@ Next, run the following command **from the root of the repository**:
 ```sh
 docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 ```
+
+
+Alternatively, if docker is not available or feasable. It is possible to use a trail hosted version of Elasticsearch at: 
+
+https://www.elastic.co/cloud/
 
 ## Running
 
@@ -99,7 +106,6 @@ options:
   --lm {dpr,longformer}, -l {dpr,longformer}
                         The language model to use for the FAISS retriever
 ```
-
 
 
 Check out the configuration reference at https://huggingface.co/docs/hub/spaces#reference
