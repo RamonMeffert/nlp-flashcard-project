@@ -5,6 +5,7 @@ colorFrom: yellow
 colorTo: blue
 sdk: gradio
 sdk_version: 2.9.0
+python_version: 3.10.4
 app_file: app.py
 pinned: true
 ---
@@ -24,11 +25,12 @@ View the demo at huggingface spaces:
 
 Make sure you have the following tools installed:
 
+- [Python](https://www.python.org/downloads/) ^3.10,<3.11
 - [Poetry](https://python-poetry.org/) for Python package management;
 - [Docker](https://www.docker.com/get-started/) for running ElasticSearch.
-- [Git LFS](https://git-lfs.github.com/) for downloading binary files that do not fit in git. 
+- [Git LFS](https://git-lfs.github.com/) for downloading binary files that do not fit in git.
 
-Then, run the following commands:
+Then, run the following commands to install dependencies and Elasticsearch:
 
 ```sh
 poetry install
@@ -40,7 +42,7 @@ docker run --name es01 --net elastic -p 9200:9200 -p 9300:9300 -it docker.elasti
 After the last command, a password for the `elastic` user should show up in the
 terminal output (you might have to scroll up a bit). Copy this password, and
 create a copy of the `.env.example` file and rename it to `.env`. Replace the
-`<password>` placeholder with your copied password.
+`<password>` placeholder with your copied password. The .env file can be used to change configuration of the system, leave it as is for a replication study.
 
 Next, run the following command **from the root of the repository**:
 
@@ -48,10 +50,9 @@ Next, run the following command **from the root of the repository**:
 docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 ```
 
+**NOTE 1:** If docker is not available or feasable. It is possible to use a trail hosted version of Elasticsearch at: https://www.elastic.co/cloud/
 
-Alternatively, if docker is not available or feasable. It is possible to use a trail hosted version of Elasticsearch at: 
-
-https://www.elastic.co/cloud/
+**NOTE 2** Installing dependencies without poetry is possible, but it is not our recommendation. To do so execute `pip install -r requirements.txt`
 
 ## Running
 
@@ -59,10 +60,6 @@ To make sure we're using the dependencies managed by Poetry, run `poetry shell`
 before executing any of the following commands. Alternatively, replace any call
 like `python file.py` with `poetry run python file.py` (but we suggest the shell
 option, since it is much more convenient).
-
-### Training
-
-N/A for now
 
 ### Using the QA system
 
@@ -108,4 +105,15 @@ options:
 ```
 
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces#reference
+### Replicating the experiment
+
+To fully run experiments, you need to run the following command:
+
+```
+# in the root of the project and poetry environment activated
+python main.py
+```
+
+This command run all questions trough the system and stores the output to the `results/` directory.
+
+After performing the experiment, results can be analyzed and displayed by running `plot.py` and the `results/*_analysis.ipynb` files.
