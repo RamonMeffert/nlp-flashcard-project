@@ -29,7 +29,7 @@ def get_retriever(paragraphs: DatasetDict,
                   lm: Literal["dpr", "longformer"]) -> Retriever:
     match (r, lm):
         case "es", _:
-            return ESRetriever()
+            return ESRetriever(paragraphs)
         case "faiss", "dpr":
             options = FaissRetrieverOptions.dpr("./src/models/dpr.faiss")
             return FaissRetriever(paragraphs, options)
